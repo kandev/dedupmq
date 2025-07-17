@@ -56,7 +56,7 @@ static int on_message(int event, void *event_data, void *userdata) {
     if (!matched) return MOSQ_ERR_SUCCESS; // Skip if not in filter
 
     // Hash payload
-    char *hash_key = sha256_hex(msg->payload, msg->payloadlen);
+    char *hash_key = xxhash64_hex(msg->payload, msg->payloadlen);
 
     // Check memcached
     memcached_return rc;
