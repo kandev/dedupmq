@@ -67,8 +67,12 @@ static int on_message(int event, void *event_data, void *userdata) {
         mosquitto_log_printf(MOSQ_LOG_NOTICE, "[dedupmq] Dropped duplicate on %s = %s", msg->topic, msg->payload);
         free(val);
         free(hash_key);
-        // Drop message
-        return MOSQ_ERR_PLUGIN_IGNORE;
+        // Drop message silently
+        msg->payloadllen = 0;
+        msg->payload = NULL;
+        msg->retain = 0;
+        msg->qos = 0;
+        return MOSQ_ERR_SUCCESS;
     }
 
     // Store hash in Memcached
