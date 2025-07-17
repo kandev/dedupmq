@@ -40,7 +40,7 @@ static char *xxhash64_hex(const void *payload, int len) {
 static int on_message(int event, void *event_data, void *userdata) {
     struct mosquitto_evt_message *msg = event_data;
 
-    if (verbose_log) mosquitto_log_printf(MOSQ_LOG_INFO, "[dedupmq] %s published to %s payload %s", msg->clientid, msg->topic, msg->payload);
+    if (verbose_log) mosquitto_log_printf(MOSQ_LOG_INFO, "[dedupmq] Published to %s -> %s", msg->topic, msg->payload);
 
     // Check if topic matches any filter
     int matched = 0;
