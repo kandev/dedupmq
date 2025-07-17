@@ -68,7 +68,7 @@ static int on_message(int event, void *event_data, void *userdata) {
         free(val);
         free(hash_key);
         // Drop message silently
-        msg->payloadllen = 0;
+        msg->payloadlen = 0;
         msg->payload = NULL;
         msg->retain = 0;
         msg->qos = 0;
