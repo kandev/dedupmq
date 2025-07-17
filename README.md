@@ -18,11 +18,11 @@ All incoming messages are matched against this storage and if duplicate is found
 First install the prerequisites:
 ```
 apt update
-apt install libmosquitto-dev libmemcached-dev libssl-dev mosquitto-dev gcc memcached
+apt install libmosquitto-dev libmemcached-dev libxxhash-dev mosquitto-dev gcc memcached
 ```
 Then compile:
 ```
-gcc -fPIC -shared dedupmq.c -lmosquitto -lmemcached -lssl -lcrypto -o /usr/lib/dedupmq.so
+gcc -fPIC -shared dedupmq.c -lmosquitto -lmemcached -lxxhash -o /usr/lib/dedupmq.so
 ```
 
 # Configuration & Installation

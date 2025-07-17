@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <openssl/sha.h>
+#include <xxhash.h>
 #include <libmemcached/memcached.h>
 #include <mosquitto_broker.h>
 #include <mosquitto_plugin.h>
@@ -29,21 +29,18 @@ static int topic_count = 0;
 static int ttl_seconds = 60;
 static int verbose_log = 0;
 
-static char *sha256_hex(const void *payload, int len) {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256((const unsigned char *)payload, len, hash);
-
-    char *hex = malloc(SHA256_DIGEST_LENGTH * 2 + 1);
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
-        sprintf(hex + (i * 2), "%02x", hash[i]);
-    hex[SHA256_DIGEST_LENGTH * 2] = '\0';
+// Using xxHash because it's faster
+static char *xxhash64_hex(const void *payload, int len) {
+    XXH64_hash_t hash = XXH64(payload, len, 0);
+    char *hex = malloc(17);
+    snprintf(hex, 17, "%016llx", (unsigned long long)hash);
     return hex;
 }
 
 static int on_message(int event, void *event_data, void *userdata) {
     struct mosquitto_evt_message *msg = event_data;
 
-    if (verbose_log) mosquitto_log_printf(MOSQ_LOG_INFO, "[dedupmq] Received tpopic %s with payload %s", msg->topic, msg->payload);
+    if (verbose_log) mosquitto_log_printf(MOSQ_LOG_INFO, "[dedupmq] %s published to %s payload %s", msg->clientid, msg->topic, msg->payload);
 
     // Check if topic matches any filter
     int matched = 0;
@@ -70,7 +67,8 @@ static int on_message(int event, void *event_data, void *userdata) {
         mosquitto_log_printf(MOSQ_LOG_NOTICE, "[dedupmq] Dropped duplicate on %s = %s", msg->topic, msg->payload);
         free(val);
         free(hash_key);
-        return MOSQ_ERR_PLUGIN_IGNORE; // Drop message
+        // Drop message
+        return MOSQ_ERR_PLUGIN_IGNORE;
     }
 
     // Store hash in Memcached
@@ -88,10 +86,11 @@ static int on_message(int event, void *event_data, void *userdata) {
 int mosquitto_plugin_version(int supported_version_count, const int *supported_versions) {
     for (int i = 0; i < supported_version_count; i++) {
         if (supported_versions[i] == 5) {
-            return 5;  // Declare we support plugin API v5
+            // Declare support of plugin API v5
+            return 5;
         }
     }
-    return -1; // Unsupported
+    return -1;
 }
 
 int mosquitto_plugin_init(mosquitto_plugin_id_t *identifier, void **userdata, struct mosquitto_opt *options, int option_count) {
