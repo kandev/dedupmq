@@ -23,7 +23,7 @@
 #endif
 
 static mosquitto_plugin_id_t *plugin_id;
-static memcached_st *memc;
+static memcached_st *memc = NULL;
 static char *topics[MAX_TOPICS];
 static int topic_count = 0;
 static int ttl_seconds = 60;
@@ -104,18 +104,12 @@ int mosquitto_plugin_init(mosquitto_plugin_id_t *identifier, void **userdata, st
             if (topic_count < MAX_TOPICS) {
                 topics[topic_count++] = strdup(options[i].value);
             }
-        } else if (!strcmp(options[i].key, "memcached_host")) {
-            memcached_host = options[i].value;
-        } else if (!strcmp(options[i].key, "memcached_port")) {
-            memcached_ports = options[i].value;
-        } else if (!strcmp(options[i].key, "ttl")) {
-            ttl_seconds = atoi(options[i].value);
-        } else if (!strcmp(options[i].key, "verbose_log")) {
-            verbose_log = (!strcmp(options[i].value, "true") || !strcmp(options[i].value, "1"));
-        }
+        } else if (!strcmp(options[i].key, "memcached_host")) memcached_host = options[i].value;
+        else if (!strcmp(options[i].key, "memcached_port")) memcached_ports = options[i].value;
+        else if (!strcmp(options[i].key, "ttl")) ttl_seconds = atoi(options[i].value);
+        else if (!strcmp(options[i].key, "verbose_log")) verbose_log = (!strcmp(options[i].value, "true") || !strcmp(options[i].value, "1"));
     }
 
-    memcached_return rc;
     memc = memcached_create(NULL);
     int memcached_port = atoi(memcached_ports);
     memcached_server_add(memc, memcached_host, memcached_port);
