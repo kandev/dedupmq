@@ -40,7 +40,12 @@ static char *xxhash64_hex(const void *payload, int len) {
 static int on_message(int event, void *event_data, void *userdata) {
     struct mosquitto_evt_message *msg = event_data;
 
-    if (verbose_log) mosquitto_log_printf(MOSQ_LOG_INFO, "[dedupmq] Published to %s -> %s", msg->topic, msg->payload);
+    // Get client id
+    const char *client_id = mosquitto_client_id(msg->client);
+    if (!client_id) return MOSQ_ERR_SUCCESS;
+
+    // In case of debugging...
+    if (verbose_log) mosquitto_log_printf(MOSQ_LOG_INFO, "[dedupmq] %s published to %s -> %s", client_id, msg->topic, msg->payload);
 
     // Check if topic matches any filter
     int matched = 0;
@@ -64,7 +69,7 @@ static int on_message(int event, void *event_data, void *userdata) {
     uint32_t flags;
     char *val = memcached_get(memc, hash_key, strlen(hash_key), &val_len, &flags, &rc);
     if (val) {
-        mosquitto_log_printf(MOSQ_LOG_NOTICE, "[dedupmq] Dropped duplicate on %s = %s", msg->topic, msg->payload);
+        mosquitto_log_printf(MOSQ_LOG_NOTICE, "[dedupmq] Dropped duplicate by %s on %s hash %s", client_id, msg->topic, hash_key);
         free(val);
         free(hash_key);
         // Drop message silently
@@ -72,7 +77,8 @@ static int on_message(int event, void *event_data, void *userdata) {
         msg->payload = NULL;
         msg->retain = 0;
         msg->qos = 0;
-        return MOSQ_ERR_SUCCESS;
+//        return MOSQ_ERR_PLUGIN_IGNORE;
+        return MOSQ_ERR_ACL_DENIED;
     }
 
     // Store hash in Memcached
