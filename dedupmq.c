@@ -52,7 +52,7 @@ static int on_message(int event, void *event_data, void *userdata) {
         bool res;
         if (mosquitto_topic_matches_sub(topics[i], msg->topic, &res) == MOSQ_ERR_SUCCESS && res) {
             matched = 1;
-            if (verbose_log) mosquitto_log_printf(MOSQ_LOG_INFO, "[dedupmq] Matched filter - should break");
+            if (verbose_log) mosquitto_log_printf(MOSQ_LOG_INFO, "[dedupmq] Topic matched, let's do some work...");
             break;
         }
     }
