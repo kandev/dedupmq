@@ -14,7 +14,7 @@ And it seems like it's not common practice to have such topology and most MQTT b
 DedupMQ will store payload hash in Memcashed storage for certain period of time (TTL).
 All incoming messages are matched against this storage and if duplicate is found - the message is dropped.
 
-# Compile and install
+# Compilation
 First install the prerequisites:
 ```
 apt update
@@ -25,7 +25,7 @@ Then compile:
 gcc -fPIC -shared dedupmq.c -lmosquitto -lmemcached -lssl -lcrypto -o /usr/lib/dedupmq.so
 ```
 
-# Configuration
+# Configuration & Installation
 Add the following lines to Mosquitto's configuration:
 ```
 plugin /usr/lib/dedupmq.so
